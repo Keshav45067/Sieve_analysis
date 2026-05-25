@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
-import { AppState, Sieve, PileData, Envelope, ValidationState } from '@/types';
+import { AppState, Sieve, PileData, Envelope, ValidationState, VolumetricState, PileVolumetricData } from '@/types';
 import { STANDARD_SIEVES } from '@/utils/constants';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { computeAndValidatePile } from '@/utils/calculations';
@@ -16,8 +16,9 @@ interface AppContextType {
     updateProportions: (proportions: number[]) => void;
     togglePileLock: (idx: number) => void;
     setSelectedEnvelopeId: (id: string | null) => void;
-    setCustomEnvelope: (envelope: Envelope | null) => void;
     setUseCustomEnvelope: (use: boolean) => void;
+    updateTotalAggregateMass: (mass: number, unit: Unit) => void;
+    updateVolumetrics: (updates: Partial<VolumetricState> | ((prev: VolumetricState) => VolumetricState)) => void;
     resetState: () => void;
     isClient: boolean;
 }
@@ -39,12 +40,65 @@ const defaultState: AppState = {
     selectedEnvelopeId: null,
     customEnvelope: null,
     useCustomEnvelope: false,
+    totalAggregateMass: 1000,
+    totalAggregateMassUnit: 'g',
+    volumetrics: {
+        isSetupComplete: false,
+        gb: 1.02,
+        loadFactor: 5.66,
+        targetVa: 4.0,
+        gmmCalculationMethod: 'practical',
+        waterAbsorption: 0,
+        bitumenAbsorptionFraction: 60,
+        binders: [
+            {
+                id: 'binder-1',
+                pb: 4.5,
+                gmbSamples: [
+                    { id: 's1-1', w1: 0, w2: 0, w3: 0, diameter: 101.6, height: 63.5, provingRingReading: 0, flow: 0, gmb: null, stability: null },
+                    { id: 's1-2', w1: 0, w2: 0, w3: 0, diameter: 101.6, height: 63.5, provingRingReading: 0, flow: 0, gmb: null, stability: null },
+                    { id: 's1-3', w1: 0, w2: 0, w3: 0, diameter: 101.6, height: 63.5, provingRingReading: 0, flow: 0, gmb: null, stability: null },
+                ],
+                avgGmb: null
+            },
+            {
+                id: 'binder-2',
+                pb: 5.0,
+                gmbSamples: [
+                    { id: 's2-1', w1: 0, w2: 0, w3: 0, diameter: 101.6, height: 63.5, provingRingReading: 0, flow: 0, gmb: null, stability: null },
+                    { id: 's2-2', w1: 0, w2: 0, w3: 0, diameter: 101.6, height: 63.5, provingRingReading: 0, flow: 0, gmb: null, stability: null },
+                    { id: 's2-3', w1: 0, w2: 0, w3: 0, diameter: 101.6, height: 63.5, provingRingReading: 0, flow: 0, gmb: null, stability: null },
+                ],
+                avgGmb: null
+            },
+            {
+                id: 'binder-3',
+                pb: 5.5,
+                gmbSamples: [
+                    { id: 's3-1', w1: 0, w2: 0, w3: 0, diameter: 101.6, height: 63.5, provingRingReading: 0, flow: 0, gmb: null, stability: null },
+                    { id: 's3-2', w1: 0, w2: 0, w3: 0, diameter: 101.6, height: 63.5, provingRingReading: 0, flow: 0, gmb: null, stability: null },
+                    { id: 's3-3', w1: 0, w2: 0, w3: 0, diameter: 101.6, height: 63.5, provingRingReading: 0, flow: 0, gmb: null, stability: null },
+                ],
+                avgGmb: null
+            }
+        ],
+        pileVolumetrics: [
+            { pileId: 'pile-1', gc: 2.65, gf: 2.62, pc: 50, pf: 50, gSb: null }
+        ],
+        gmmBinderId: 'binder-2',
+        gmmSamples: [
+            { id: 'gmm-1', a: 0, b: 0, c: 0, d: 0, gmm: null },
+            { id: 'gmm-2', a: 0, b: 0, c: 0, d: 0, gmm: null }
+        ],
+        avgExperimentalGmm: null,
+        gSe: null,
+    }
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-    const [state, setState, isClient] = useLocalStorage<AppState>('sieve-app-state-v2', defaultState);
+    const [state, setState, isClient] = useLocalStorage<AppState>('sieve-app-state-v3', defaultState);
 
     // Compute validation state dynamically instead of storing it
     const validationState = useMemo<ValidationState>(() => {
@@ -96,6 +150,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 locked: false,
             };
             const newProportions = [...prev.proportions, 0];
+            
+            const newPileVolumetric: PileVolumetricData = {
+                pileId: newPileId,
+                gc: 2.65,
+                gf: 2.62,
+                pc: 50,
+                pf: 50,
+                gSb: null
+            };
 
             // Auto-normalize proportions with locks
             const lockedIdx = prev.piles.reduce((acc, p, idx) => p.locked ? [...acc, idx] : acc, [] as number[]);
@@ -112,6 +175,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 ...prev,
                 piles: [...prev.piles, newPile],
                 proportions: normalizedProportions,
+                volumetrics: {
+                    ...prev.volumetrics,
+                    pileVolumetrics: [...prev.volumetrics.pileVolumetrics, newPileVolumetric]
+                }
             };
         });
     };
@@ -125,6 +192,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
             const newPiles = prev.piles.filter(p => p.id !== id);
             const newProportions = prev.proportions.filter((_, idx) => idx !== indexToRemove);
+            
+            const newPileVolumetrics = prev.volumetrics.pileVolumetrics.filter(pv => pv.pileId !== id);
 
             // Re-normalize unlocked
             const lockedIdx = newPiles.reduce((acc, p, idx) => p.locked ? [...acc, idx] : acc, [] as number[]);
@@ -146,6 +215,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
                 ...prev,
                 piles: newPiles,
                 proportions: normalizedProportions,
+                volumetrics: {
+                    ...prev.volumetrics,
+                    pileVolumetrics: newPileVolumetrics
+                }
             };
         });
     };
@@ -180,6 +253,19 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const setUseCustomEnvelope = (use: boolean) => {
         setState((prev: AppState) => ({ ...prev, useCustomEnvelope: use }));
     };
+    
+    const updateTotalAggregateMass = (mass: number, unit: Unit) => {
+        setState((prev: AppState) => ({ ...prev, totalAggregateMass: mass, totalAggregateMassUnit: unit }));
+    };
+
+    const updateVolumetrics = (updates: Partial<VolumetricState> | ((prev: VolumetricState) => VolumetricState)) => {
+        setState((prev: AppState) => {
+            const newVolumetrics = typeof updates === 'function' 
+                ? updates(prev.volumetrics) 
+                : { ...prev.volumetrics, ...updates };
+            return { ...prev, volumetrics: newVolumetrics };
+        });
+    };
 
     const resetState = () => {
         setState(defaultState);
@@ -198,6 +284,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             setSelectedEnvelopeId,
             setCustomEnvelope,
             setUseCustomEnvelope,
+            updateTotalAggregateMass,
+            updateVolumetrics,
             resetState,
             isClient
         }),
