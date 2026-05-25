@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
-import { AppState, Sieve, PileData, Envelope, ValidationState, VolumetricState, PileVolumetricData } from '@/types';
+import { AppState, Sieve, PileData, Envelope, ValidationState, VolumetricState, PileVolumetricData, Unit } from '@/types';
 import { STANDARD_SIEVES } from '@/utils/constants';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { computeAndValidatePile } from '@/utils/calculations';
@@ -16,6 +16,7 @@ interface AppContextType {
     updateProportions: (proportions: number[]) => void;
     togglePileLock: (idx: number) => void;
     setSelectedEnvelopeId: (id: string | null) => void;
+    setCustomEnvelope: (envelope: Envelope | null) => void;
     setUseCustomEnvelope: (use: boolean) => void;
     updateTotalAggregateMass: (mass: number, unit: Unit) => void;
     updateVolumetrics: (updates: Partial<VolumetricState> | ((prev: VolumetricState) => VolumetricState)) => void;

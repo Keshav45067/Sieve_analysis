@@ -1,5 +1,5 @@
 import { AppState, ValidationState, BinderResult, Sieve, Envelope, EnvelopeLimit } from '../types';
-import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, ImageRun, AlignmentType, VerticalAlign, BorderStyle, WidthType, HeightRule, ShadingType, UnderlineType, VerticalMergeType, ParagraphStyle, ExternalHyperlink, Header, Footer } from 'docx';
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, ImageRun, AlignmentType, VerticalAlign, BorderStyle, WidthType, HeightRule, ShadingType, UnderlineType, VerticalMergeType } from 'docx';
 import { computeAndValidatePile, computeBlend } from './calculations';
 import { calculateCombinedGsb, calculateSurfaceArea, computeVolumetricResults, findOptimalBinder, fitPolynomial } from './volumetrics';
 import { STANDARD_SIEVES, MORTH_ENVELOPES } from './constants';
@@ -311,7 +311,7 @@ export async function generateReport(state: AppState): Promise<Blob> {
                                 new TableCell({
                                     width: { size: 26, type: WidthType.PERCENTAGE },
                                     margins: CELL_MARGIN,
-                                    children: [new Paragraph({ children: [new ImageRun({ data: logoBuf, transformation: { width: 100, height: 100 } })] })],
+                                    children: [new Paragraph({ children: [new ImageRun({ type: 'png', data: logoBuf, transformation: { width: 100, height: 100 } })] })],
                                 }),
                                 new TableCell({
                                     width: { size: 74, type: WidthType.PERCENTAGE },
@@ -491,7 +491,7 @@ export async function generateReport(state: AppState): Promise<Blob> {
                     rows: [
                         new TableRow({
                             children: [
-                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: chartGradation, transformation: { width: 450, height: 300 } })] })] })
+                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: chartGradation, transformation: { width: 450, height: 300 } })] })] })
                             ]
                         }),
                         new TableRow({
@@ -513,8 +513,8 @@ export async function generateReport(state: AppState): Promise<Blob> {
                     rows: [
                         new TableRow({
                             children: [
-                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: cVa, transformation: { width: 300, height: 225 } })] })] }),
-                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: cGmb, transformation: { width: 300, height: 225 } })] })] })
+                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: cVa, transformation: { width: 300, height: 225 } })] })] }),
+                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: cGmb, transformation: { width: 300, height: 225 } })] })] })
                             ]
                         }),
                         new TableRow({
@@ -525,8 +525,8 @@ export async function generateReport(state: AppState): Promise<Blob> {
                         }),
                         new TableRow({
                             children: [
-                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: cVma, transformation: { width: 300, height: 225 } })] })] }),
-                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: cVfb, transformation: { width: 300, height: 225 } })] })] })
+                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: cVma, transformation: { width: 300, height: 225 } })] })] }),
+                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: cVfb, transformation: { width: 300, height: 225 } })] })] })
                             ]
                         }),
                         new TableRow({
@@ -537,8 +537,8 @@ export async function generateReport(state: AppState): Promise<Blob> {
                         }),
                         new TableRow({
                             children: [
-                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: cStab, transformation: { width: 300, height: 225 } })] })] }),
-                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: cFlow, transformation: { width: 300, height: 225 } })] })] })
+                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: cStab, transformation: { width: 300, height: 225 } })] })] }),
+                                new TableCell({ margins: CELL_MARGIN, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: cFlow, transformation: { width: 300, height: 225 } })] })] })
                             ]
                         }),
                         new TableRow({
