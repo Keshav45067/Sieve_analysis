@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { AppState, Sieve, PileData, Envelope, ValidationState, VolumetricState, PileVolumetricData, Unit } from '@/types';
-import { STANDARD_SIEVES } from '@/utils/constants';
+import { STANDARD_SIEVES, MORTH_ENVELOPES } from '@/utils/constants';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { computeAndValidatePile } from '@/utils/calculations';
 
@@ -38,7 +38,7 @@ const defaultState: AppState = {
         },
     ],
     proportions: [1],
-    selectedEnvelopeId: null,
+    selectedEnvelopeId: 'bc-2',
     customEnvelope: null,
     useCustomEnvelope: false,
     totalAggregateMass: 1000,
@@ -123,19 +123,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         return { isValid, pileValidations, globalErrors };
     }, [state]);
 
-    const updateSieves = (sieves: Sieve[]) => {
-        setState((prev: AppState) => {
-            const newPiles = prev.piles.map(pile => {
-                let newData = [...pile.data];
-                if (newData.length < sieves.length) {
-                    newData = [...newData, ...new Array(sieves.length - newData.length).fill(pile.inputMode === 'percent_passing' ? 0 : 0)];
-                } else if (newData.length > sieves.length) {
-                    newData = newData.slice(0, sieves.length);
+    const updateSievesInState = (prevState: AppState, newSieves: Sieve[]): AppState => {
+        const oldSieves = prevState.sieves;
+        const newPiles = prevState.piles.map(pile => {
+            const newData = newSieves.map(ns => {
+                const oldIdx = oldSieves.findIndex(os => os.size_mm === ns.size_mm);
+                if (oldIdx >= 0) {
+                    return pile.data[oldIdx];
                 }
-                return { ...pile, data: newData };
+                return 0; // default for new sieve size
             });
-            return { ...prev, sieves, piles: newPiles };
+            return { ...pile, data: newData };
         });
+        return { ...prevState, sieves: newSieves, piles: newPiles };
+    };
+
+    const updateSieves = (sieves: Sieve[]) => {
+        setState((prev: AppState) => updateSievesInState(prev, sieves));
     };
 
     const addPile = () => {
@@ -244,15 +248,45 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const setSelectedEnvelopeId = (id: string | null) => {
-        setState((prev: AppState) => ({ ...prev, selectedEnvelopeId: id }));
+        setState((prev: AppState) => {
+            let nextState = { ...prev, selectedEnvelopeId: id };
+            if (id) {
+                const envelope = MORTH_ENVELOPES.find(e => e.id === id);
+                if (envelope) {
+                    const newSieves = envelope.limits.map(l => ({ size_mm: l.size_mm }));
+                    nextState = updateSievesInState(nextState, newSieves);
+                }
+            }
+            return nextState;
+        });
     };
 
     const setCustomEnvelope = (envelope: Envelope | null) => {
-        setState((prev: AppState) => ({ ...prev, customEnvelope: envelope }));
+        setState((prev: AppState) => {
+            let nextState = { ...prev, customEnvelope: envelope };
+            if (envelope && prev.useCustomEnvelope) {
+                const newSieves = envelope.limits.map(l => ({ size_mm: l.size_mm }));
+                nextState = updateSievesInState(nextState, newSieves);
+            }
+            return nextState;
+        });
     };
 
     const setUseCustomEnvelope = (use: boolean) => {
-        setState((prev: AppState) => ({ ...prev, useCustomEnvelope: use }));
+        setState((prev: AppState) => {
+            let nextState = { ...prev, useCustomEnvelope: use };
+            if (use && prev.customEnvelope) {
+                const newSieves = prev.customEnvelope.limits.map(l => ({ size_mm: l.size_mm }));
+                nextState = updateSievesInState(nextState, newSieves);
+            } else if (!use && prev.selectedEnvelopeId) {
+                const envelope = MORTH_ENVELOPES.find(e => e.id === prev.selectedEnvelopeId);
+                if (envelope) {
+                    const newSieves = envelope.limits.map(l => ({ size_mm: l.size_mm }));
+                    nextState = updateSievesInState(nextState, newSieves);
+                }
+            }
+            return nextState;
+        });
     };
     
     const updateTotalAggregateMass = (mass: number, unit: Unit) => {

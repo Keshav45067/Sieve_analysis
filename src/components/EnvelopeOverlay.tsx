@@ -1,13 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { MORTH_ENVELOPES } from '@/utils/constants';
-import { Layers, Settings2 } from 'lucide-react';
+import { Layers, Plus, Trash2 } from 'lucide-react';
 import { Envelope } from '@/types';
 
 export default function EnvelopeOverlay() {
     const { state, setSelectedEnvelopeId, setUseCustomEnvelope, setCustomEnvelope } = useAppContext();
+    const [newSieveSize, setNewSieveSize] = useState<string>('');
 
     const handleCustomLimitChange = (size_mm: number, field: 'lower' | 'upper', value: string) => {
         const numVal = parseFloat(value);
@@ -42,6 +43,27 @@ export default function EnvelopeOverlay() {
         const existing = state.customEnvelope?.limits.find(l => l.size_mm === sieve.size_mm);
         return existing || { size_mm: sieve.size_mm, lower: 0, upper: 100 };
     });
+
+    const handleAddSieve = () => {
+        const size = parseFloat(newSieveSize);
+        if (!isNaN(size) && size > 0 && !customLimits.find(l => l.size_mm === size)) {
+            let currentEnv = state.customEnvelope || { id: 'custom', name: 'Custom Envelope', limits: customLimits };
+            const newLimits = [...currentEnv.limits, { size_mm: size, lower: 0, upper: 100 }];
+            newLimits.sort((a, b) => b.size_mm - a.size_mm);
+            setCustomEnvelope({ ...currentEnv, limits: newLimits });
+            setNewSieveSize('');
+        }
+    };
+
+    const handleRemoveSieve = (size_mm: number) => {
+        if (state.customEnvelope) {
+            const newLimits = state.customEnvelope.limits.filter(l => l.size_mm !== size_mm);
+            setCustomEnvelope({ ...state.customEnvelope, limits: newLimits });
+        } else {
+            const newLimits = customLimits.filter(l => l.size_mm !== size_mm);
+            setCustomEnvelope({ id: 'custom', name: 'Custom Envelope', limits: newLimits });
+        }
+    };
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-6">
@@ -115,10 +137,30 @@ export default function EnvelopeOverlay() {
             ) : (
                 <div className="space-y-4">
                     <label className="block text-sm font-medium text-slate-700">Define Custom Envelope Limits</label>
+                    
+                    <div className="flex gap-2">
+                        <input
+                            type="number"
+                            step="0.001"
+                            value={newSieveSize}
+                            onChange={(e) => setNewSieveSize(e.target.value)}
+                            placeholder="Add Sieve size (mm)"
+                            className="flex-1 px-3 py-1.5 text-sm text-slate-900 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddSieve()}
+                        />
+                        <button
+                            onClick={handleAddSieve}
+                            className="px-3 py-1.5 bg-indigo-50 text-indigo-600 text-sm font-medium rounded-md hover:bg-indigo-100 flex items-center gap-1 transition-colors"
+                        >
+                            <Plus className="w-4 h-4" /> Add
+                        </button>
+                    </div>
+
                     <div className="max-h-[300px] overflow-y-auto pr-2">
                         <table className="w-full text-left text-slate-900 text-sm">
                             <thead>
                                 <tr className="text-slate-500 text-xs sticky top-0 bg-white">
+                                    <th className="pb-2 w-8"></th>
                                     <th className="pb-2">Sieve (mm)</th>
                                     <th className="pb-2">Lower (%)</th>
                                     <th className="pb-2">Upper (%)</th>
@@ -127,6 +169,15 @@ export default function EnvelopeOverlay() {
                             <tbody>
                                 {customLimits.map((limit, idx) => (
                                     <tr key={limit.size_mm} className="border-t border-slate-100">
+                                        <td className="py-2 pr-2">
+                                            <button
+                                                onClick={() => handleRemoveSieve(limit.size_mm)}
+                                                className="text-slate-400 hover:text-red-500 transition-colors"
+                                                title="Remove Sieve"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </td>
                                         <td className="py-2 font-medium text-slate-700">{limit.size_mm}</td>
                                         <td className="py-2 pr-2">
                                             <input

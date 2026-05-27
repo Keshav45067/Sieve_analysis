@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppContext } from '@/context/AppContext';
-import SieveSelector from '@/components/SieveSelector';
 import PileInputTable from '@/components/PileInputTable';
 import BlendController from '@/components/BlendController';
 import GradationChart from '@/components/GradationChart';
@@ -119,14 +118,13 @@ export default function Home() {
             className="grid grid-cols-1 lg:grid-cols-3 gap-6"
           >
             <div className="lg:col-span-2 space-y-6">
-              <SieveSelector />
+              <EnvelopeOverlay />
               <PileInputTable />
               <GradationChart />
             </div>
 
             <div className="space-y-6">
               <BlendController />
-              <EnvelopeOverlay />
               <AggregateSurfaceArea />
             </div>
           </motion.div>
