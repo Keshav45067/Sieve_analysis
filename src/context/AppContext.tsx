@@ -126,13 +126,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const updateSievesInState = (prevState: AppState, newSieves: Sieve[]): AppState => {
         const oldSieves = prevState.sieves;
         const newPiles = prevState.piles.map(pile => {
-            const newData = newSieves.map(ns => {
+            const newData: number[] = [];
+            for (let i = 0; i < newSieves.length; i++) {
+                const ns = newSieves[i];
                 const oldIdx = oldSieves.findIndex(os => os.size_mm === ns.size_mm);
                 if (oldIdx >= 0) {
-                    return pile.data[oldIdx];
+                    newData.push(pile.data[oldIdx]);
+                } else {
+                    if (pile.inputMode === 'percent_passing') {
+                        // Inherit from the sieve above (larger size), or 100 if it's the largest sieve
+                        const prevValue = i > 0 ? newData[i - 1] : 100;
+                        newData.push(prevValue);
+                    } else {
+                        // For weight_retained, a new sieve safely caught 0 weight
+                        newData.push(0);
+                    }
                 }
-                return 0; // default for new sieve size
-            });
+            }
             return { ...pile, data: newData };
         });
         return { ...prevState, sieves: newSieves, piles: newPiles };
