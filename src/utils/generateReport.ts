@@ -43,8 +43,8 @@ const renderGradationChart = async (sieves: Sieve[], combinedPassing: number[], 
         for (let i = 0; i <= 10; i++) {
             const y = 50 + i * 30;
             ctx.beginPath(); ctx.moveTo(50, y); ctx.lineTo(550, y); ctx.stroke();
-            ctx.fillStyle = '#64748b';
-            ctx.font = '10px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.font = '12px Arial';
             ctx.textAlign = 'right';
             ctx.fillText((100 - i * 10).toString(), 45, y + 4);
         }
@@ -71,8 +71,8 @@ const renderGradationChart = async (sieves: Sieve[], combinedPassing: number[], 
             
             ctx.strokeStyle = '#000000';
             ctx.beginPath(); ctx.moveTo(px, 350); ctx.lineTo(px, 355); ctx.stroke();
-            ctx.fillStyle = '#64748b';
-            ctx.font = '10px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.font = '12px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(s.size_mm.toString(), px, 368);
         });
@@ -178,16 +178,16 @@ const renderMarshallChart = async (results: BinderResult[], optPb: number | null
             const y = 50 + i * 50;
             const valY = pMaxY - (i / 4) * (pMaxY - pMinY);
             ctx.beginPath(); ctx.moveTo(50, y); ctx.lineTo(370, y); ctx.stroke();
-            ctx.fillStyle = '#64748b';
-            ctx.font = '10px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.font = '12px Arial';
             ctx.textAlign = 'right';
             ctx.fillText(valY.toFixed(1), 45, y + 4);
 
             const x = 50 + i * 80;
             const valX = pMinX + (i / 4) * (pMaxX - pMinX);
             ctx.beginPath(); ctx.moveTo(x, 50); ctx.lineTo(x, 250); ctx.stroke();
-            ctx.fillStyle = '#64748b';
-            ctx.font = '10px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.font = '12px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(valX.toFixed(1), x, 265);
         }
