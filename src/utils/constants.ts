@@ -167,5 +167,33 @@ export const MORTH_ENVELOPES: Envelope[] = [
             { size_mm: 0.15, lower: 12, upper: 20 },
             { size_mm: 0.075, lower: 4, upper: 10 }
         ]
+    },
+    {
+        id: 'dbm-1',
+        name: 'DBM Grading 1 (37.5 mm)',
+        limits: [
+            { size_mm: 45, lower: 100, upper: 100 },
+            { size_mm: 37.5, lower: 95, upper: 100 },
+            { size_mm: 26.5, lower: 63, upper: 93 },
+            { size_mm: 13.2, lower: 55, upper: 75 },
+            { size_mm: 4.75, lower: 38, upper: 54 },
+            { size_mm: 2.36, lower: 28, upper: 42 },
+            { size_mm: 0.3, lower: 7, upper: 21 },
+            { size_mm: 0.075, lower: 2, upper: 8 }
+        ]
+    },
+    {
+        id: 'dbm-2',
+        name: 'DBM Grading 2 (26.5 mm)',
+        limits: [
+            { size_mm: 37.5, lower: 100, upper: 100 },
+            { size_mm: 26.5, lower: 90, upper: 100 },
+            { size_mm: 19, lower: 71, upper: 95 },
+            { size_mm: 13.2, lower: 56, upper: 80 },
+            { size_mm: 4.75, lower: 38, upper: 54 },
+            { size_mm: 2.36, lower: 28, upper: 42 },
+            { size_mm: 0.3, lower: 7, upper: 21 },
+            { size_mm: 0.075, lower: 2, upper: 8 }
+        ]
     }
 ];
